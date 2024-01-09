@@ -23,11 +23,19 @@ async function getPreds(choice) {
 }
 
 var apiKey = "";
+var selectedModel = "gpt-3.5-turbo-1106";
 
 function recordKey() {
   // Get the value entered in the text input
   apiKey = document.getElementById("input_APIKey").value;
 }
+
+document.addEventListener('DOMContentLoaded', function () {
+  document.getElementById('submitButton').addEventListener('click', function () {
+    var dropdown = document.getElementById('myDropdown');
+    selectedModel = dropdown.value;
+  });
+});
 
 function firstRound(currentText) {
   return currentText == "Once upon a time..."
@@ -170,7 +178,7 @@ async function openAIFetchAPI(promptMessages, numChoices, stopChars) {
       'Content-Type': 'application/json'
     },
     body: JSON.stringify({
-      "model": "gpt-4",
+      "model": selectedModel,
       "messages": promptMessages,
       "max_tokens": 250,
       "temperature": 1,

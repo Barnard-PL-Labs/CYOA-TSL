@@ -17,6 +17,12 @@
     border-radius: 50%;
 }
 
+/* Optional: Adjust this height as needed */
+.max-h-96 {
+    max-height: 24rem; /* 24rem = 384px */
+}
+  
+
 @keyframes loading-bar-spinner {
     0% {
         transform: rotate(0deg);

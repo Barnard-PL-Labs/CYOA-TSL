@@ -11,46 +11,55 @@
 
 <body>
   <div class="container mx-auto p-12">
-    <h1 class="text-3xl font-bold text-center mb-12">Choose your own adventure</h1>
-    <div class="mb-6">
-      <label for="input_APIKey">Enter OpenAI API Key (use "test" to skip key):</label>
-      <input type="text" id="input_APIKey" class="block w-full p-2 border border-gray-300 rounded-md">
-      <button id="submitAPIKey"
-        class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-md mb-6">Submit</button>
+    <h1 class="text-3xl font-bold text-center mb-12">Choose your own adventure with TSL and ChatGPT</h1>
+    <div class="flex mb-6">
+      <div class="w-1/2 pr-4">
+        <label for="input_APIKey" class="block text-sm font-medium text-gray-700">Enter OpenAI API Key:</label>
+        <div class="flex">
+          <input type="text" id="input_APIKey" class="block w-full p-2 border border-gray-300 rounded-md mb-2">
+          <button id="submitAPIKey" class="bg-blue-500 hover:bg-blue-700 text-white py-2 px-4 rounded-md ml-2" style="margin-bottom: 0.375rem;">Submit</button>
+        </div>
+      </div>
+      <div class="w-1/2 pl-4">
+        <label for="myDropdown" class="block text-sm font-medium text-gray-700">Select a value:</label>
+        <div class="flex">
+          <select id="myDropdown" class="block w-full p-2.5 border border-gray-300 rounded-md focus:outline-none focus:ring focus:border-blue-300">
+            <option value="gpt-3.5-turbo-1106">ChatGPT Turbo 3.5</option>
+            <option value="gpt-4">ChatGPT 4.0</option>
+          </select>
+          <button id="submitButton" class="bg-blue-500 hover:bg-blue-700 text-white py-2 px-4 rounded-md ml-2">Submit</button>
+        </div>
+      </div>
     </div>
-    <div class="max-w-md mx-auto">
-      <label for="myDropdown" class="block text-sm font-medium text-gray-700">Select a value:</label>
-      <select id="myDropdown"
-        class="mt-1 block w-full p-2 border border-gray-300 rounded-md focus:outline-none focus:ring focus:border-blue-300">
-        <option value="gpt-3.5-turbo-1106">ChatGPT Turbo 3.5</option>
-        <option value="gpt-4">ChatGPT 4.0</option>
-      </select>
-
-      <button id="submitButton"
-        class="mt-4 px-4 py-2 text-white bg-blue-500 rounded-md hover:bg-blue-600 focus:outline-none focus:ring focus:border-blue-300">Submit</button>
-    </div>
-
-
     <div class="p-4">
       <input type="checkbox" id="townCheck" class="mr-2"> <label for="townCheck">visited town</label>
       <input type="checkbox" id="marketCheck" class="mr-2"> <label for="marketCheck">visited market</label>
       <input type="checkbox" id="caveCheck" class="mr-2"> <label for="caveCheck">visited cave</label>
-      <br>
-      <br>
-
-      <p id="adventureText" class="mt-4">
-        Once upon a time...
-      </p>
-      <button id="choice1" class="bg-blue-500 text-white px-4 py-2 rounded">Start the adventure!</button>
-      <button id="choice2" class="bg-blue-500 text-white px-4 py-2 rounded"></button>
-      <br>
-      <br>
-      <button id="restart" class="bg-red-500 text-white px-4 py-2 rounded">Restart Story</button>
-      <p class="mt-4">Story Log:</p>
-      <br>
-      <p id="log"></p>
     </div>
-
+  
+    <div class="flex mb-6">
+      <div class="w-1/2 pr-4">
+        <!-- Choices div -->
+        <div class="p-4">
+          <p id="adventureText" class=" mt-4 block text-sm font-medium text-gray-700">
+            Once upon a time...
+          </p>
+          <button id="choice1" class="bg-green-500 hover:bg-green-700 text-white px-4 py-2 rounded">Start the adventure!</button>
+          <br>
+          <br>
+          <button id="choice2" class="bg-green-500 hover:bg-green-700 text-white px-4 py-2 rounded"></button>
+        </div>
+      </div>
+      <div class="w-1/2 pl-4">
+        <!-- Story log div -->
+        <p class="mt-4 block text-sm font-medium text-gray-700">Story Log:</p>
+        <div class="max-h-96 overflow-y-scroll border border-gray-300 p-4">
+          <ul id="log" class="list-disc list-inside"></ul>
+        </div>
+      </div>
+    </div>
+    <button id="restart" class="bg-red-500 hover:bg-red-700  text-white px-4 py-2 rounded">Restart Story</button>
+  </div>
 </body>
 
 <script src="TSLfunctions.js"> </script>

@@ -1,26 +1,19 @@
-document.getElementById('submitAPIKey').addEventListener("click", recordKey);
-document.getElementById('choice1').addEventListener("click", getNextPassageAndChoices);
-document.getElementById('choice2').addEventListener("click", getNextPassageAndChoices);
+document.getElementById('choice1').addEventListener("click", getNextPassage);
+document.getElementById('choice2').addEventListener("click", getNextPassage);
 document.getElementById('restart').addEventListener("click", restart);
+document.getElementById('submitAPIKey').addEventListener("click", recordKey);
+document.getElementById('submitButton').addEventListener("click", function() {
+  var dropdown = document.getElementById('myDropdown');
+  selectedModel = dropdown.value;
+});
 
 // list of all passages for summarization
-let passages = []
+let passages = [];
+let preds = [];
 // global variable for the current passage of each time step
 let passage;
-let passageTarget = "toMarket";
-let currentText;
-storySummary = ""
-const numPassagesToConsider = 3;
-
-// compute all predicates ahead of time
-async function getPreds(choice) {
-  let preds = await Promise.all([
-    checkInCave(storySummary),
-    checkInMarket(storySummary),
-    checkInTown(storySummary),
-  ]);
-  return preds;
-}
+let storySummary = ""
+var apiKey = "";
 
 var apiKey = "";
 var selectedModel = "gpt-3.5-turbo-1106";
@@ -41,29 +34,14 @@ function firstRound(currentText) {
   return currentText == "Once upon a time..."
 }
 
-function restart() {
-  document.getElementById('adventureText').innerHTML = "Once upon a time...";
-  document.getElementById('choice1').innerHTML = "Start your adventure!";
-  document.getElementById('choice2').innerHTML = "";
-  document.getElementById('log').innerHTML = "";
-  document.getElementById('caveCheck').checked = false;
-  document.getElementById('marketCheck').checked = false;
-  document.getElementById('townCheck').checked = false;
-
-  currentText = "";
-  passages = [];
-  storySummary = "";
-  currentState = 0;
-  passage = "";
-  passageTarget = "toMarket";
-
-  toCave = "toCave";
-  toMarket = "toMarket";
-  toTown = "toTown";
-
-  inCave = undefined;
-  inMarket = undefined;
-  inTown = undefined;
+// PREDICATE SPECIFIC
+// compute all predicates ahead of time
+async function getPreds() {
+  return await Promise.all([
+    checkObstacle("cave"),
+    checkObstacle("market"),
+    checkObstacle("town"),
+  ]);
 }
 
 async function getChoices(nextPassage) {
@@ -78,7 +56,7 @@ async function getChoices(nextPassage) {
   })
 
   let choice2Prompt = [
-    { role: "system", content: "You are writing a choose your own adventure book. Given the passage, give a single next concrete action for the player, such as walking to the left. Refer to the reader as `You` and use the present active tense. Do not prefix options with numbers. Do not use the word `can`. Do not use the word `or`. The choice must be a different concrete action from: `" + choice1 + "`." }, //maybe ask for different kinds of options here - as mediated by TSL?
+    { role: "system", content: "You are writing a choose your own adventure book. Given the passage, give a single next concrete action for the player, such as walking to the left. Refer to the reader as `You` and use the present active tense. Do not prefix options with numbers. Do not use the word `can`. Do not use the word `or`. The choice must be a completely different concrete action from: `" + choice1 + "`." }, //maybe ask for different kinds of options here - as mediated by TSL?
     { role: "user", content: nextPassage },
   ];
 
@@ -87,24 +65,23 @@ async function getChoices(nextPassage) {
   });
 }
 
-async function getNextPassageAndChoices() {
-  currentText = document.getElementById('adventureText').innerHTML.trim();
+async function getNextPassage() {
+  intro = document.getElementById('adventureText').innerHTML.trim()
   document.getElementById('adventureText').innerHTML = "<img src=\"walk.gif\"></img>";
+  console.log(this.innerHTML)
   let passagePrompt = [
     { role: "system", content: "You are writing a choose your own adventure book. Compose a one paragraph-long passage of the story of at most 100 words. The paragraph should end just before a critical choice. Do not specify choices. Write in the present tense." },
-    { role: "assistant", content: storySummary + " " + currentText },
+    { role: "assistant", content: storySummary + " " + passage },
     { role: "user", content: this.innerHTML.replace("You", "I") },
   ];
 
   // dont enter the automaton until the first round is over
-  if (firstRound(currentText)) {
-    console.log("first round")
-    passagePrompt[0].content += " Compose the introductory passage of the story which describes the character and the setting. "
-    //"The initial setting can not be in a market, town, or cave."
-    openAIFetchAPI(passagePrompt, 1, "\n").then(newText => {
+  if (firstRound(intro)) {
+    passagePrompt[0].content += " Compose the introductory passage of the story which describes the character and the setting. The initial setting can not be in a market, town, or cave."
+    await openAIFetchAPI(passagePrompt, 1, "\n").then(newText => {
       passage = newText[0].message.content;
-      document.getElementById('adventureText').innerHTML = passage;
-      console.log("next passage: " + currentText)
+      document.getElementById('adventureText').innerHTML = "";
+      console.log("next passage: " + passage)
       document.getElementById('log').innerHTML += (this.innerHTML + "<br><br>" + passage + "<br><br>");
       updateSummary(passage).then(summary => {
         storySummary = summary;
@@ -113,8 +90,9 @@ async function getNextPassageAndChoices() {
     });
   }
   else {
-    // compute all predicates ahead of time for the sake of efficiency and money
-    getPreds(this.innerHTML.replace("You", "I")).then(async preds => {
+      // PREDICATE SPECIFIC
+      // -----------------
+      let preds = await getPreds();
       inCave = preds[0];
       inMarket = preds[1];
       inTown = preds[2];
@@ -136,38 +114,68 @@ async function getNextPassageAndChoices() {
 
       let choice = this.innerHTML.replace("You", "I")
 
-      // TSL automaton
+      // TSL synthesized automaton
       updateState();
+
       console.log(passageTarget)
       if (passageTarget == "toCave") {
         console.log("TSL says go to cave")
-        passage = await cave(storySummary, choice)
+        passage = await obstacle(storySummary, choice, "cave")
       }
       else if (passageTarget == "toMarket") {
         console.log("TSL says go to market")
-        passage = await market(storySummary, choice)
+        passage = await obstacle(storySummary, choice, "market")
       }
       else if (passageTarget == "toTown") {
         console.log("TSL says go to town")
-        passage = await town(storySummary, choice)
+        passage = await obstacle(storySummary, choice, "town")
       }
+      // -----------------
 
-      // update story summary and choices
-      document.getElementById('adventureText').innerHTML = passage;
+      // update story summary 
+      document.getElementById('adventureText').innerHTML = "";
       document.getElementById('log').innerHTML += (this.innerHTML + "<br><br>" + passage + "<br><br>");
-      updateSummary(passage).then(summary => {
+      await updateSummary(passage).then(summary => {
         storySummary = summary;
         console.log("Current state: " + currentState);
         console.log("Generated passage: " + passage);
         console.log("Updated summary: " + storySummary);
         getChoices(passage)
       });
-    });
   }
 }
 
+function restart() {
+  document.getElementById('adventureText').innerHTML = "Once upon a time...";
+  document.getElementById('log').innerHTML = "";
+
+  passages = [];
+  preds = [];
+  storySummary = "";
+  currentState = 0;
+  passage = "";
+  currentState = 0;
+
+  //PREDICATE SPECIFIC
+  // -----------------
+  document.getElementById('caveCheck').checked = false;
+  document.getElementById('marketCheck').checked = false;
+  document.getElementById('townCheck').checked = false;
+
+  passageTarget = "toMarket";
+
+  toCave = "toCave";
+  toMarket = "toMarket";
+  toTown = "toTown";
+
+  inCave = undefined;
+  inMarket = undefined;
+  inTown = undefined;
+  // -----------------
+}
+
 async function openAIFetchAPI(promptMessages, numChoices, stopChars) {
-  console.log("Calling GPT3")
+  console.log("Calling " + selectedModel + " API...")
   const url = "https://api.openai.com/v1/chat/completions";
   const YOUR_TOKEN = apiKey //add your own openai api key
   const bearer = 'Bearer ' + YOUR_TOKEN

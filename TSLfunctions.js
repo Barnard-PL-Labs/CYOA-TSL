@@ -17,7 +17,7 @@ async function obstacle(summary, choice, obstacle) {
 async function checkObstacle(obstacle) {
   console.log("checking if in " + obstacle + "...");
   let passagePrompt = [
-    { role: "system", content: "Read this passage in an adventure story. Is the main character actively in a " + obstacle + " or not? Respond '0' if it is false, or '1' if it is true." },
+    { role: "system", content: "Read this passage in an adventure story. Is the main character actively in a " + obstacle + "? If yes, end with a '1'. If no, end with a '0'. Please also explain your reasoning for your answer." },
     { role: "user", content: passage },
   ];
   return await getAPIResponse(passagePrompt, true)
@@ -26,7 +26,7 @@ async function checkObstacle(obstacle) {
 async function updateSummary(previousSummary) {
   passages.push(previousSummary);
   let summaryPrompt = [
-    { role: "system", content: "You are writing a book and need to recall important points of the story so far. Summarize the provided passage from about the story so far in moderate detail, including the main character description, the locations visited, items  acquired, and interactions with other characters. Specifically, make sure to include if the player has visited a town, a market, or a cave." }, //maybe ask for different kinds of options here - as mediated by TSL?
+    { role: "system", content: "You are writing a book and need to recall important points of the story so far. Summarize the provided passage from about the story so far in moderate detail, including the main character description, the locations visited, items  acquired, and interactions with other characters." }, //maybe ask for different kinds of options here - as mediated by TSL?
     { role: "user", content: passages.slice(-numPassagesToConsider).join(' ') },
   ];
   return await getAPIResponse(summaryPrompt, false);
@@ -37,7 +37,8 @@ async function getAPIResponse(prompt, isPredicate) {
     let newText = await openAIFetchAPI(prompt, 1, "\n");
     let response = newText[0].message.content;
     if (isPredicate) {
-      let pred = response.includes("1");
+      console.log("response: ", response)
+      let pred = (response.includes("1") || response.includes("true") || response.includes("True"));
       return pred;
     }
     else {

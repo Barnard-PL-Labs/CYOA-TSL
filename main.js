@@ -148,6 +148,8 @@ async function getNextPassage() {
 function restart() {
   document.getElementById('adventureText').innerHTML = "Once upon a time...";
   document.getElementById('log').innerHTML = "";
+  document.getElementById('choice1').innerHTML = "Start the adventure!";
+  document.getElementById('choice2').innerHTML = "";
 
   passages = [];
   preds = [];
